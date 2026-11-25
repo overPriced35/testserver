@@ -8,6 +8,7 @@ Config.MaxCharacters = 3
 
 Config.PositionSaveInterval = 120000
 Config.PositionSaveThrottle = 60000
+Config.AppearanceSaveThrottle = 10000
 Config.MaxAppearanceBytes = 32768
 
 -- Initial city spawn used only for characters without a saved position.
