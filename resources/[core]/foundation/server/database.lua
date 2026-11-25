@@ -45,7 +45,7 @@ end
 
 function FoundationDB.FetchCharacter(identifier, characterId)
     return MySQL.single.await(
-        ('SELECT id, owner_identifier, firstname, lastname, date_of_birth, gender, created_at, last_seen FROM %s WHERE owner_identifier = ? AND id = ?'):format(Config.CharacterTable),
+        ('SELECT id, owner_identifier, firstname, lastname, date_of_birth, gender, appearance, last_x, last_y, last_z, last_heading, created_at, last_seen FROM %s WHERE owner_identifier = ? AND id = ?'):format(Config.CharacterTable),
         { identifier, characterId }
     )
 end
@@ -54,5 +54,19 @@ function FoundationDB.TouchCharacter(identifier, characterId)
     MySQL.update.await(
         ('UPDATE %s SET last_seen = NOW() WHERE owner_identifier = ? AND id = ?'):format(Config.CharacterTable),
         { identifier, characterId }
+    )
+end
+
+function FoundationDB.SaveCharacterState(identifier, characterId, state)
+    return MySQL.update.await(
+        ('UPDATE %s SET last_x = ?, last_y = ?, last_z = ?, last_heading = ?, last_seen = NOW() WHERE owner_identifier = ? AND id = ?'):format(Config.CharacterTable),
+        { state.x, state.y, state.z, state.heading, identifier, characterId }
+    )
+end
+
+function FoundationDB.SaveCharacterAppearance(identifier, characterId, appearance)
+    return MySQL.update.await(
+        ('UPDATE %s SET appearance = ? WHERE owner_identifier = ? AND id = ?'):format(Config.CharacterTable),
+        { json.encode(appearance), identifier, characterId }
     )
 end

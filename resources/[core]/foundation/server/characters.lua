@@ -1,5 +1,7 @@
 FoundationCharacters = {}
 
+local lastStateSave = {}
+
 local function trim(value)
     return (value:gsub('^%s*(.-)%s*$', '%1'))
 end
@@ -27,6 +29,18 @@ local function getLoadedPlayer(source)
     local player = FoundationPlayers.Get(source)
     if not player then return nil, 'Player session is not loaded.' end
     return player
+end
+
+local function validPosition(position)
+    if type(position) ~= 'table' then return false end
+    for _, key in ipairs({ 'x', 'y', 'z', 'heading' }) do
+        local value = tonumber(position[key])
+        if not value or value ~= value or value == math.huge or value == -math.huge then return false end
+    end
+    return math.abs(position.x) <= 10000
+        and math.abs(position.y) <= 10000
+        and position.z >= -500 and position.z <= 3000
+        and position.heading >= 0 and position.heading <= 360
 end
 
 function FoundationCharacters.List(source)
@@ -68,11 +82,42 @@ function FoundationCharacters.Select(source, characterId)
     local character = FoundationDB.FetchCharacter(player.identifier, characterId)
     if not character then return false, 'That character does not belong to your account.' end
 
-    FoundationDB.TouchCharacter(player.identifier, characterId)
+    character.appearance = character.appearance and json.decode(character.appearance) or nil
     player.character = character
+    FoundationDB.TouchCharacter(player.identifier, characterId)
     TriggerEvent('foundation:server:characterSelected', source, character)
     TriggerClientEvent('foundation:client:characters:selected', source, true, character)
     return true, character
+end
+
+function FoundationCharacters.SavePosition(source, position)
+    local player = FoundationPlayers.Get(source)
+    if not player or not player.character then return false end
+    if not validPosition(position) then return false end
+
+    local now = GetGameTimer()
+    local previous = lastStateSave[source] or 0
+    if now - previous < Config.PositionSaveThrottle then return false end
+    lastStateSave[source] = now
+
+    return FoundationDB.SaveCharacterState(
+        player.identifier,
+        player.character.id,
+        {
+            x = tonumber(position.x),
+            y = tonumber(position.y),
+            z = tonumber(position.z),
+            heading = tonumber(position.heading)
+        }
+    )
+end
+
+function FoundationCharacters.SaveAppearance(source, appearance)
+    local player = FoundationPlayers.Get(source)
+    if not player or not player.character or type(appearance) ~= 'table' then return false end
+    local encoded = json.encode(appearance)
+    if type(encoded) ~= 'string' or #encoded > Config.MaxAppearanceBytes then return false end
+    return FoundationDB.SaveCharacterAppearance(player.identifier, player.character.id, appearance)
 end
 
 RegisterNetEvent('foundation:server:characters:request', function()
@@ -93,7 +138,17 @@ RegisterNetEvent('foundation:server:characters:select', function(characterId)
     if not ok then TriggerClientEvent('foundation:client:characters:selected', source, false, result) end
 end)
 
+RegisterNetEvent('foundation:server:characters:savePosition', function(position)
+    FoundationCharacters.SavePosition(source, position)
+end)
+
+RegisterNetEvent('foundation:server:characters:saveAppearance', function(appearance)
+    FoundationCharacters.SaveAppearance(source, appearance)
+end)
+
 exports('GetCharacter', function(source)
     local player = FoundationPlayers.Get(source)
     return player and player.character or nil
 end)
+
+exports('SaveCharacterAppearance', FoundationCharacters.SaveAppearance)

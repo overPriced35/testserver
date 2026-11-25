@@ -1,10 +1,25 @@
 local uiOpen = false
-local spawnPending = false
+local activeCharacter = nil
 
 local function setUi(state)
     uiOpen = state
     SetNuiFocus(state, state)
     SendNUIMessage({ action = state and 'open' or 'close' })
+end
+
+local function getCurrentPosition()
+    local coords = GetEntityCoords(PlayerPedId())
+    return {
+        x = coords.x,
+        y = coords.y,
+        z = coords.z,
+        heading = GetEntityHeading(PlayerPedId())
+    }
+end
+
+local function savePosition()
+    if not activeCharacter then return end
+    TriggerServerEvent('foundation:server:characters:savePosition', getCurrentPosition())
 end
 
 RegisterNetEvent('foundation:client:characters:open', function()
@@ -37,24 +52,30 @@ RegisterNetEvent('foundation:client:characters:selected', function(success, resu
         return
     end
 
+    activeCharacter = result
     setUi(false)
-    spawnPending = true
+
     local spawn = Config.Spawn
+    if result.last_x ~= nil and result.last_y ~= nil and result.last_z ~= nil then
+        spawn = {
+            x = tonumber(result.last_x),
+            y = tonumber(result.last_y),
+            z = tonumber(result.last_z),
+            heading = tonumber(result.last_heading) or Config.Spawn.heading
+        }
+    end
+
     DoScreenFadeOut(400)
     while not IsScreenFadedOut() do Wait(0) end
 
-    if IsScreenFadedOut() then
-        NetworkResurrectLocalPlayer(spawn.x, spawn.y, spawn.z, spawn.heading, true, false)
-        SetEntityCoordsNoOffset(PlayerPedId(), spawn.x, spawn.y, spawn.z, false, false, false)
-        SetEntityHeading(PlayerPedId(), spawn.heading)
-        ClearPedTasksImmediately(PlayerPedId())
-        RemoveAllPedWeapons(PlayerPedId(), true)
-        TriggerEvent('playerSpawned', spawn)
-        DoScreenFadeIn(800)
-    end
+    NetworkResurrectLocalPlayer(spawn.x, spawn.y, spawn.z, spawn.heading, true, false)
+    SetEntityCoordsNoOffset(PlayerPedId(), spawn.x, spawn.y, spawn.z, false, false, false)
+    SetEntityHeading(PlayerPedId(), spawn.heading)
+    ClearPedTasksImmediately(PlayerPedId())
+    TriggerEvent('playerSpawned', spawn)
+    DoScreenFadeIn(800)
 
-    spawnPending = false
-    TriggerEvent('foundation:client:characterReady', result)
+    TriggerEvent('foundation:client:characterReady', result, result.appearance)
 end)
 
 RegisterNUICallback('createCharacter', function(data, cb)
@@ -84,4 +105,25 @@ CreateThread(function()
             Wait(500)
         end
     end
+end)
+
+CreateThread(function()
+    while true do
+        Wait(Config.PositionSaveInterval)
+        savePosition()
+    end
+end)
+
+AddEventHandler('onResourceStop', function(resourceName)
+    if resourceName == GetCurrentResourceName() then
+        savePosition()
+    end
+end)
+
+RegisterNetEvent('foundation:client:saveAppearance', function(appearance)
+    TriggerServerEvent('foundation:server:characters:saveAppearance', appearance)
+end)
+
+exports('GetActiveCharacter', function()
+    return activeCharacter
 end)

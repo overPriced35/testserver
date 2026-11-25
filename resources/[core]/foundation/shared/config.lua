@@ -6,7 +6,11 @@ Config.PlayerTable = 'players'
 Config.CharacterTable = 'characters'
 Config.MaxCharacters = 3
 
--- Initial public spawn. Replace with the server's chosen city spawn later.
+Config.PositionSaveInterval = 120000
+Config.PositionSaveThrottle = 60000
+Config.MaxAppearanceBytes = 32768
+
+-- Initial city spawn used only for characters without a saved position.
 Config.Spawn = {
     x = -1037.7,
     y = -2737.8,

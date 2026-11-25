@@ -4,7 +4,7 @@ lua54 'yes'
 
 name 'foundation'
 description 'Server foundation: player lifecycle, accounts and characters'
-version '0.3.0'
+version '0.4.0'
 
 ui_page 'web/index.html'
 
