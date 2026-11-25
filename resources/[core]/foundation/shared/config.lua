@@ -5,4 +5,11 @@ Config.IdentifierType = 'license'
 Config.PlayerTable = 'players'
 Config.CharacterTable = 'characters'
 Config.MaxCharacters = 3
-Config.SaveInterval = 5 * 60 * 1000
+
+-- Initial public spawn. Replace with the server's chosen city spawn later.
+Config.Spawn = {
+    x = -1037.7,
+    y = -2737.8,
+    z = 20.2,
+    heading = 329.0
+}

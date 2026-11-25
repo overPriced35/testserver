@@ -4,7 +4,15 @@ lua54 'yes'
 
 name 'foundation'
 description 'Server foundation: player lifecycle, accounts and characters'
-version '0.2.0'
+version '0.3.0'
+
+ui_page 'web/index.html'
+
+files {
+    'web/index.html',
+    'web/style.css',
+    'web/app.js'
+}
 
 shared_scripts {
     'shared/config.lua'

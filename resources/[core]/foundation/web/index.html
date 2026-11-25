@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Character</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main id="app" class="hidden">
+    <section class="panel">
+      <header>
+        <div class="eyebrow">CITIZEN SERVICES</div>
+        <h1 id="heading">Select character</h1>
+        <p id="subheading">Choose who you're bringing into the city.</p>
+      </header>
+      <div id="notice" role="status"></div>
+      <div id="character-list" class="character-list"></div>
+      <button id="new-character" class="secondary" type="button">＋ Create character</button>
+      <form id="create-form" class="hidden">
+        <div class="form-grid">
+          <label>First name<input name="firstname" maxlength="24" minlength="2" required autocomplete="off"></label>
+          <label>Last name<input name="lastname" maxlength="24" minlength="2" required autocomplete="off"></label>
+          <label>Date of birth<input name="date_of_birth" type="date" required></label>
+          <label>Gender<select name="gender" required><option value="">Choose</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select></label>
+        </div>
+        <div class="actions">
+          <button id="cancel-create" class="secondary" type="button">Back</button>
+          <button class="primary" type="submit">Create character</button>
+        </div>
+      </form>
+    </section>
+    <div class="corner">ROLEPLAY • CHARACTER ACCESS</div>
+  </main>
+  <script src="app.js"></script>
+</body>
+</html>
