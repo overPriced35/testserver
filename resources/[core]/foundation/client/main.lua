@@ -1,0 +1,2 @@
+-- Client entry point for the server foundation.
+-- Player-facing UI and gameplay systems will be added as real features are implemented.
