@@ -20,3 +20,39 @@ function FoundationDB.UpdateLastSeen(identifier, name)
         { name, identifier }
     )
 end
+
+function FoundationDB.ListCharacters(identifier)
+    return MySQL.query.await(
+        ('SELECT id, firstname, lastname, date_of_birth, gender, created_at, last_seen FROM %s WHERE owner_identifier = ? ORDER BY id ASC'):format(Config.CharacterTable),
+        { identifier }
+    ) or {}
+end
+
+function FoundationDB.CountCharacters(identifier)
+    local result = MySQL.scalar.await(
+        ('SELECT COUNT(*) FROM %s WHERE owner_identifier = ?'):format(Config.CharacterTable),
+        { identifier }
+    )
+    return tonumber(result) or 0
+end
+
+function FoundationDB.CreateCharacter(identifier, data)
+    return MySQL.insert.await(
+        ('INSERT INTO %s (owner_identifier, firstname, lastname, date_of_birth, gender, created_at, last_seen) VALUES (?, ?, ?, ?, ?, NOW(), NOW())'):format(Config.CharacterTable),
+        { identifier, data.firstname, data.lastname, data.date_of_birth, data.gender }
+    )
+end
+
+function FoundationDB.FetchCharacter(identifier, characterId)
+    return MySQL.single.await(
+        ('SELECT id, owner_identifier, firstname, lastname, date_of_birth, gender, created_at, last_seen FROM %s WHERE owner_identifier = ? AND id = ?'):format(Config.CharacterTable),
+        { identifier, characterId }
+    )
+end
+
+function FoundationDB.TouchCharacter(identifier, characterId)
+    MySQL.update.await(
+        ('UPDATE %s SET last_seen = NOW() WHERE owner_identifier = ? AND id = ?'):format(Config.CharacterTable),
+        { identifier, characterId }
+    )
+end

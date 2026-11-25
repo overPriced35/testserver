@@ -4,6 +4,12 @@ AddEventHandler('playerJoining', function()
     if not ok then
         print(('[foundation] Failed to load player %s: %s'):format(source, err))
         DropPlayer(source, 'Your player data could not be loaded. Please reconnect.')
+        return
+    end
+
+    local player = FoundationPlayers.Get(source)
+    if player then
+        TriggerClientEvent('foundation:client:characters:open', source)
     end
 end)
 
