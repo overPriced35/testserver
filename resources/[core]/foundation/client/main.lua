@@ -265,7 +265,7 @@ RegisterNUICallback('saveAppearance', function(_, cb)
 end)
 
 RegisterNUICallback('close', function(_, cb)
-    if appearanceEditorOpen then appearanceEditorOpen = false; setUi(false); cb({ ok = true })
+    if appearanceEditorOpen then appearanceEditorOpen = false; stopPreviewCamera(); setUi(false); cb({ ok = true })
     else cb({ ok = false }) end
 end)
 
