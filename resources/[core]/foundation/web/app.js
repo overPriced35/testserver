@@ -12,6 +12,7 @@ const faceControls=document.getElementById('face-controls');
 const inventoryPanel=document.getElementById('inventory-panel');
 const inventoryGrid=document.getElementById('inventory-grid');
 const inventoryWeight=document.getElementById('inventory-weight');
+const inventoryStatus=document.getElementById('inventory-status');
 const post=(name,data)=>fetch('https://foundation/'+name,{method:'POST',headers:{'Content-Type':'application/json; charset=UTF-8'},body:JSON.stringify(data)}).then(r=>r.json());
 let characterCount=0;
 const componentNames=['Face','Mask','Hair','Torso','Legs','Bag','Shoes','Accessories','Undershirt','Body armor','Decals','Top'];
@@ -20,6 +21,19 @@ const faceNames=['Nose width','Nose peak height','Nose peak length','Nose bone h
 function message(text){notice.textContent=text||'';}
 function showCreate(show){editor.classList.add('hidden');form.classList.toggle('hidden',!show);list.classList.toggle('hidden',show);createButton.classList.toggle('hidden',show);heading.textContent=show?'Create character':'Select character';subheading.textContent=show?'Enter the details for your new citizen.':'Choose who you are bringing into the city.';message('');}
 function renderCharacters(characters){characterCount=characters.length;list.replaceChildren();characters.forEach(character=>{const row=document.createElement('article');row.className='character';const details=document.createElement('div');const name=document.createElement('strong');name.textContent=character.firstname+' '+character.lastname;const meta=document.createElement('small');meta.textContent='Born '+character.date_of_birth+' · '+character.gender;details.append(name,meta);const button=document.createElement('button');button.textContent='Select';button.addEventListener('click',()=>post('selectCharacter',{id:character.id}));row.append(details,button);list.append(row);});createButton.disabled=characterCount>=3;createButton.textContent=characterCount>=3?'Character limit reached':'＋ Create character';}
+function renderStatus(status){
+ if(!status)return;
+ inventoryStatus.replaceChildren();
+ [['Hunger',status.hunger],['Thirst',status.thirst],['Stress',status.stress]].forEach(([label,value])=>{
+  const meter=document.createElement('div');meter.className='status-meter';
+  const top=document.createElement('div');top.className='status-meter-label';
+  const name=document.createElement('span');name.textContent=label;
+  const number=document.createElement('strong');number.textContent=Math.round(value)+'%';
+  const track=document.createElement('div');track.className='status-track';
+  const fill=document.createElement('div');fill.className='status-fill';fill.style.width=Math.max(0,Math.min(100,value))+'%';
+  track.append(fill);top.append(name,number);meter.append(top,track);inventoryStatus.append(meter);
+ });
+}
 function renderInventory(inventory){
  inventoryGrid.replaceChildren();
  const items=inventory?.items||[];
@@ -58,6 +72,7 @@ function buildEditor(appearance){
 }
 window.addEventListener('message',event=>{const data=event.data||{};if(data.action==='open'){app.classList.remove('hidden');inventoryPanel.classList.add('hidden');}if(data.action==='close')app.classList.add('hidden');if(data.action==='characters'){inventoryPanel.classList.add('hidden');editor.classList.add('hidden');renderCharacters(data.characters||[]);if(data.error)message(data.error);}if(data.action==='createResult'&&!data.success)message(data.result);if(data.action==='error')message(data.message);if(data.action==='inventoryLoading'){form.classList.add('hidden');list.classList.add('hidden');createButton.classList.add('hidden');editor.classList.add('hidden');inventoryPanel.classList.remove('hidden');heading.textContent='Inventory';subheading.textContent='Your carried items.';inventoryWeight.textContent='Loading inventory…';}
 if(data.action==='inventoryData'){if(data.error)message(data.error);else renderInventory(data.inventory);}
+if(data.action==='statusData')renderStatus(data.status);
 if(data.action==='inventoryResult'){message(data.success?'Item used.':(data.error||'Could not use item.'));}
 if(data.action==='appearanceEditor'){inventoryPanel.classList.add('hidden');form.classList.add('hidden');list.classList.add('hidden');createButton.classList.add('hidden');editor.classList.remove('hidden');heading.textContent='Appearance';subheading.textContent='Customize your character.';buildEditor(data.appearance||{});message('');}});
 createButton.addEventListener('click',()=>showCreate(true));
