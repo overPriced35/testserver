@@ -1,5 +1,6 @@
 local uiOpen = false
 local activeCharacter = nil
+local appearanceEditorOpen = false
 
 local DEFAULT_MODELS = {
     male = 'mp_m_freemode_01',
@@ -169,8 +170,59 @@ RegisterNUICallback('close', function(_, cb)
     cb({ ok = false })
 end)
 
+
 RegisterCommand('saveappearance', saveAppearance, false)
+RegisterCommand('appearance', function()
+    if not activeCharacter then return end
+    appearanceEditorOpen = true
+    setUi(true)
+    SendNUIMessage({ action = 'appearanceEditor', appearance = captureAppearance() })
+end, false)
 RegisterNetEvent('foundation:client:saveAppearance', saveAppearance)
+
+RegisterNUICallback('previewComponent', function(data, cb)
+    local component, drawable = tonumber(data.component), tonumber(data.drawable)
+    local texture, ped = tonumber(data.texture) or 0, PlayerPedId()
+    if not component or component < 0 or component > 11 or component % 1 ~= 0 or not drawable or drawable < 0 or drawable % 1 ~= 0 then
+        cb({ ok = false, error = 'Invalid clothing selection.' }); return
+    end
+    local count = GetNumberOfPedDrawableVariations(ped, component)
+    if drawable >= count then cb({ ok = false, error = ('Drawable must be between 0 and %s.'):format(math.max(0, count - 1)) }); return end
+    local textures = GetNumberOfPedTextureVariations(ped, component, drawable)
+    if texture < 0 or texture >= textures then cb({ ok = false, error = ('Texture must be between 0 and %s.'):format(math.max(0, textures - 1)) }); return end
+    SetPedComponentVariation(ped, component, drawable, texture, 0)
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('previewProp', function(data, cb)
+    local prop, drawable = tonumber(data.prop), tonumber(data.drawable)
+    local texture, ped = tonumber(data.texture) or 0, PlayerPedId()
+    if not prop or prop < 0 or prop > 7 or prop % 1 ~= 0 or not drawable or drawable < -1 then
+        cb({ ok = false, error = 'Invalid accessory selection.' }); return
+    end
+    if drawable == -1 then ClearPedProp(ped, prop); cb({ ok = true }); return end
+    local count = GetNumberOfPedPropDrawableVariations(ped, prop)
+    if drawable >= count then cb({ ok = false, error = ('Drawable must be between 0 and %s.'):format(math.max(0, count - 1)) }); return end
+    local textures = GetNumberOfPedPropTextureVariations(ped, prop, drawable)
+    if texture < 0 or texture >= textures then cb({ ok = false, error = ('Texture must be between 0 and %s.'):format(math.max(0, textures - 1)) }); return end
+    SetPedPropIndex(ped, prop, drawable, texture, true)
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('saveAppearance', function(_, cb)
+    saveAppearance()
+    cb({ ok = true })
+end)
+
+RegisterNUICallback('close', function(_, cb)
+    if appearanceEditorOpen then
+        appearanceEditorOpen = false
+        setUi(false)
+        cb({ ok = true })
+    else
+        cb({ ok = false })
+    end
+end)
 
 CreateThread(function()
     while true do
