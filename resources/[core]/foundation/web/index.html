@@ -32,7 +32,37 @@
       <section id="appearance-editor" class="hidden">
         <div class="editor-heading">Clothing & accessories</div>
         <p class="editor-help">Preview component and accessory variations. Changes are saved to this character.</p>
-        <div class="editor-columns">
+        <div class="editor-extra">
+        <section class="editor-group">
+          <h2>Facial structure</h2>
+          <div id="face-controls" class="face-grid"></div>
+        </section>
+        <section class="editor-group">
+          <h2>Heritage blend</h2>
+          <div class="heritage-grid">
+            <label>Father ID<input id="shape-first" type="number" min="0" max="45" value="0"></label>
+            <label>Mother ID<input id="shape-second" type="number" min="0" max="45" value="0"></label>
+            <label>Skin father<input id="skin-first" type="number" min="0" max="45" value="0"></label>
+            <label>Skin mother<input id="skin-second" type="number" min="0" max="45" value="0"></label>
+            <label>Face blend<input id="shape-mix" type="number" min="0" max="1" step="0.05" value="0.5"></label>
+            <label>Skin blend<input id="skin-mix" type="number" min="0" max="1" step="0.05" value="0.5"></label>
+          </div>
+          <button id="apply-heritage" type="button">Apply heritage</button>
+        </section>
+        <section class="editor-group">
+          <h2>Hair & eyes</h2>
+          <div class="heritage-grid">
+            <label>Hair color<input id="hair-color" type="number" min="0" max="63" value="0"></label>
+            <label>Hair highlight<input id="hair-highlight" type="number" min="0" max="63" value="0"></label>
+            <label>Eye color<input id="eye-color" type="number" min="0" max="31" value="0"></label>
+          </div>
+          <div class="actions compact-actions">
+            <button id="apply-hair" class="secondary" type="button">Apply hair</button>
+            <button id="apply-eyes" class="secondary" type="button">Apply eyes</button>
+          </div>
+        </section>
+      </div>
+      <div class="editor-columns">
           <div><h2>Clothing</h2><div id="component-controls" class="editor-list"></div></div>
           <div><h2>Accessories</h2><div id="prop-controls" class="editor-list"></div></div>
         </div>

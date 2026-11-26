@@ -52,7 +52,6 @@ local function validAppearance(appearance)
     if appearance.model ~= 'mp_m_freemode_01' and appearance.model ~= 'mp_f_freemode_01' then return false end
     if type(appearance.components) ~= 'table' or #appearance.components > 12 then return false end
     if type(appearance.props) ~= 'table' or #appearance.props > 8 then return false end
-
     for _, item in ipairs(appearance.components) do
         if type(item) ~= 'table' or type(item.component) ~= 'number'
             or item.component < 0 or item.component > 11 or item.component % 1 ~= 0
@@ -65,6 +64,31 @@ local function validAppearance(appearance)
             or item.prop < 0 or item.prop > 7 or item.prop % 1 ~= 0
             or type(item.drawable) ~= 'number' or item.drawable < -1 or item.drawable > 500
             or type(item.texture) ~= 'number' or item.texture < 0 or item.texture > 100 then return false end
+    end
+    if appearance.faceFeatures ~= nil then
+        if type(appearance.faceFeatures) ~= 'table' or #appearance.faceFeatures > 20 then return false end
+        for _, item in ipairs(appearance.faceFeatures) do
+            if type(item) ~= 'table' or type(item.feature) ~= 'number'
+                or item.feature < 0 or item.feature > 19 or item.feature % 1 ~= 0
+                or type(item.value) ~= 'number' or item.value < -1 or item.value > 1 then return false end
+        end
+    end
+    if appearance.hair ~= nil then
+        if type(appearance.hair) ~= 'table' or type(appearance.hair.color) ~= 'number'
+            or type(appearance.hair.highlight) ~= 'number' or appearance.hair.color < 0
+            or appearance.hair.color > 63 or appearance.hair.highlight < 0 or appearance.hair.highlight > 63 then return false end
+    end
+    if appearance.eyeColor ~= nil and (type(appearance.eyeColor) ~= 'number'
+        or appearance.eyeColor < 0 or appearance.eyeColor > 31) then return false end
+    if appearance.headBlend ~= nil then
+        local blend = appearance.headBlend
+        if type(blend) ~= 'table' then return false end
+        for _, key in ipairs({ 'shapeFirst', 'shapeSecond', 'skinFirst', 'skinSecond' }) do
+            if type(blend[key]) ~= 'number' or blend[key] < 0 or blend[key] > 45 or blend[key] % 1 ~= 0 then return false end
+        end
+        for _, key in ipairs({ 'shapeMix', 'skinMix' }) do
+            if type(blend[key]) ~= 'number' or blend[key] < 0 or blend[key] > 1 then return false end
+        end
     end
     return true
 end

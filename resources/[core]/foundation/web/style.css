@@ -39,3 +39,17 @@ input:focus,select:focus{border-color:#9aa8b8}
 .editor-row .editor-number{padding:7px 5px;font-size:11px;min-width:0}
 .editor-row button{padding:7px 5px;font-size:10px}
 @media(max-width:560px){.editor-columns{grid-template-columns:1fr;max-height:52vh}}
+
+.editor-extra{display:grid;gap:14px;max-height:42vh;overflow:auto;margin:4px 0 14px;padding-right:4px}
+.editor-group{border:1px solid #303741;border-radius:8px;padding:12px;background:#171c22}
+.editor-group h2{font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:#aeb7c2;margin:0 0 10px}
+.face-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px 14px}
+.face-row{display:grid;gap:3px;font-size:10px}
+.face-row input{padding:0;accent-color:#e8edf3}
+.heritage-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.heritage-grid label{font-size:10px}
+.heritage-grid input{padding:7px;font-size:11px}
+.editor-group>button{margin-top:9px;background:#e8edf3;color:#111820}
+.compact-actions{margin-top:9px}
+.editor-columns{max-height:35vh}
+@media(max-width:560px){.face-grid{grid-template-columns:1fr}.editor-extra{max-height:45vh}}
