@@ -2,7 +2,6 @@ local uiOpen = false
 local activeCharacter = nil
 local appearanceEditorOpen = false
 local appearanceOverrides = {}
-local previewCamera = nil
 
 local DEFAULT_MODELS = { male = 'mp_m_freemode_01', female = 'mp_f_freemode_01', other = 'mp_m_freemode_01' }
 
@@ -101,26 +100,6 @@ local function currentPosition()
     return { x = coords.x, y = coords.y, z = coords.z, heading = GetEntityHeading(ped) }
 end
 
-local function startPreviewCamera()
-    if previewCamera and DoesCamExist(previewCamera) then return end
-    local ped = PlayerPedId()
-    local cameraPosition = GetOffsetFromEntityInWorldCoords(ped, 0.0, 2.1, 0.65)
-    local head = GetPedBoneCoords(ped, 31086, 0.0, 0.0, 0.0)
-    previewCamera = CreateCam('DEFAULT_SCRIPTED_CAMERA', true)
-    SetCamCoord(previewCamera, cameraPosition.x, cameraPosition.y, cameraPosition.z)
-    PointCamAtCoord(previewCamera, head.x, head.y, head.z)
-    SetCamFov(previewCamera, 38.0)
-    SetCamActive(previewCamera, true)
-    RenderScriptCams(true, true, 450, true, true)
-end
-
-local function stopPreviewCamera()
-    if not previewCamera then return end
-    RenderScriptCams(false, true, 350, true, true)
-    if DoesCamExist(previewCamera) then DestroyCam(previewCamera, false) end
-    previewCamera = nil
-end
-
 local function savePosition()
     if activeCharacter then TriggerServerEvent('foundation:server:characters:savePosition', currentPosition()) end
 end
@@ -181,7 +160,6 @@ RegisterCommand('saveappearance', saveAppearance, false)
 RegisterCommand('appearance', function()
     if not activeCharacter then return end
     appearanceEditorOpen = true
-    startPreviewCamera()
     setUi(true)
     SendNUIMessage({ action = 'appearanceEditor', appearance = captureAppearance() })
 end, false)
@@ -265,7 +243,7 @@ RegisterNUICallback('saveAppearance', function(_, cb)
 end)
 
 RegisterNUICallback('close', function(_, cb)
-    if appearanceEditorOpen then appearanceEditorOpen = false; stopPreviewCamera(); setUi(false); cb({ ok = true })
+    if appearanceEditorOpen then appearanceEditorOpen = false; setUi(false); cb({ ok = true })
     else cb({ ok = false }) end
 end)
 
@@ -284,7 +262,7 @@ CreateThread(function()
 end)
 
 AddEventHandler('onResourceStop', function(resourceName)
-    if resourceName == GetCurrentResourceName() then savePosition(); stopPreviewCamera() end
+    if resourceName == GetCurrentResourceName() then savePosition() end
 end)
 
 exports('GetActiveCharacter', function() return activeCharacter end)

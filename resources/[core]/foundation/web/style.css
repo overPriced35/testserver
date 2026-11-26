@@ -11,7 +11,7 @@ header p{margin:0 0 23px;color:#9ca5b1;font-size:13px}
 .character{display:flex;align-items:center;justify-content:space-between;padding:15px;border:1px solid #303741;border-radius:8px;background:#191e25}
 .character strong{display:block;font-size:14px;font-weight:600}
 .character small{display:block;color:#8e99a7;font-size:11px;margin-top:5px}
-button{border:0;border-radius:7px;padding:12px 15px;font:600 12px inherit;cursor:pointer;transition:background .15s,border-color .15s}
+button{border:0;border-radius:7px;padding:12px 15px;font-family:inherit;font-size:12px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s}
 .primary{background:#e8edf3;color:#111820}
 .primary:hover{background:#fff}
 .secondary{background:#252c35;color:#e9edf2;border:1px solid #39424d;width:100%}
@@ -20,7 +20,7 @@ button{border:0;border-radius:7px;padding:12px 15px;font:600 12px inherit;cursor
 #create-form{margin-top:16px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
 label{display:grid;gap:7px;color:#aeb7c2;font-size:11px}
-input,select{width:100%;padding:11px;background:#11161c;color:#f4f5f7;border:1px solid #343d48;border-radius:6px;font:13px inherit;outline:none}
+input,select{width:100%;padding:11px;background:#11161c;color:#f4f5f7;border:1px solid #343d48;border-radius:6px;font-family:inherit;font-size:13px;outline:none}
 input:focus,select:focus{border-color:#9aa8b8}
 .actions{display:flex;gap:9px;margin-top:17px}
 .actions button{width:50%}
