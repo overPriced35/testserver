@@ -1,6 +1,7 @@
 local uiOpen = false
 local activeCharacter = nil
 local appearanceEditorOpen = false
+local inventoryOpen = false
 local appearanceOverrides = {}
 
 local DEFAULT_MODELS = { male = 'mp_m_freemode_01', female = 'mp_f_freemode_01', other = 'mp_m_freemode_01' }
@@ -154,6 +155,23 @@ end)
 RegisterNUICallback('selectCharacter', function(data, cb)
     TriggerServerEvent('foundation:server:characters:select', data.id)
     cb({ ok = true })
+end)
+
+RegisterCommand('inventory', function()
+    if not activeCharacter or uiOpen then return end
+    inventoryOpen = true
+    setUi(true)
+    SendNUIMessage({ action = 'inventoryLoading' })
+    TriggerServerEvent('foundation:server:inventory:request')
+end, false)
+RegisterKeyMapping('inventory', 'Open inventory', 'keyboard', 'F2')
+
+RegisterNetEvent('foundation:client:inventory:data', function(inventory, err)
+    SendNUIMessage({ action = 'inventoryData', inventory = inventory, error = err })
+end)
+
+RegisterNetEvent('foundation:client:inventory:actionResult', function(success, err)
+    SendNUIMessage({ action = 'inventoryResult', success = success, error = err })
 end)
 
 RegisterCommand('saveappearance', saveAppearance, false)
