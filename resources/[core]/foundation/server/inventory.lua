@@ -2,6 +2,9 @@ FoundationInventory = {}
 local definitions = {}
 local usableItems = {}
 local locks = {}
+local useLocks = {}
+local lastInventoryRequest = {}
+local lastItemUse = {}
 
 local function validItemName(name)
     return type(name) == 'string' and #name >= 2 and #name <= 48 and name:match('^[a-z0-9_%-]+$') ~= nil
@@ -195,26 +198,36 @@ function FoundationInventory.RegisterUsableItem(name, callback)
 end
 
 function FoundationInventory.UseItem(source, slot)
+    if useLocks[source] then return false, 'An item is already being used.' end
+    useLocks[source] = true
     slot = tonumber(slot)
     if not slot or slot < 1 or slot > Config.InventorySlots or slot % 1 ~= 0 then
+        useLocks[source] = nil
         return false, 'Invalid inventory slot.'
     end
     local inventory, err = FoundationInventory.GetInventory(source)
-    if not inventory then return false, err end
+    if not inventory then useLocks[source] = nil; return false, err end
     local selected
     for _, item in ipairs(inventory.items) do
         if item.slot == slot then selected = item; break end
     end
-    if not selected then return false, 'That inventory slot is empty.' end
+    if not selected then useLocks[source] = nil; return false, 'That inventory slot is empty.' end
     local callback = usableItems[selected.name]
-    if not callback then return false, 'This item cannot be used.' end
+    if not callback then useLocks[source] = nil; return false, 'This item cannot be used.' end
     local ok, consume = pcall(callback, source, selected)
     if not ok then
         print(('[foundation] Item use failed (%s): %s'):format(selected.name, consume))
+        useLocks[source] = nil
         return false, 'The item could not be used.'
     end
-    if consume == true then return FoundationInventory.RemoveItem(source, selected.name, 1, selected.metadata) end
-    return consume ~= false, consume == false and 'The item could not be used.' or nil
+    local result, detail
+    if consume == true then
+        result, detail = FoundationInventory.RemoveItem(source, selected.name, 1, selected.metadata)
+    else
+        result, detail = consume ~= false, consume == false and 'The item could not be used.' or nil
+    end
+    useLocks[source] = nil
+    return result, detail
 end
 
 function FoundationInventory.HasItem(source, name, count)
@@ -239,6 +252,9 @@ exports('HasItem', FoundationInventory.HasItem)
 
 AddEventHandler('playerDropped', function()
     locks[source] = nil
+    useLocks[source] = nil
+    lastInventoryRequest[source] = nil
+    lastItemUse[source] = nil
 end)
 
 FoundationInventory.RegisterItem('water', { label = 'Water', weight = 500, maxStack = 10, description = 'A bottle of drinking water.' })
@@ -247,12 +263,18 @@ FoundationInventory.RegisterItem('phone', { label = 'Mobile Phone', weight = 250
 
 RegisterNetEvent('foundation:server:inventory:request', function()
     local source = source
+    local now = GetGameTimer()
+    if lastInventoryRequest[source] and now - lastInventoryRequest[source] < 300 then return end
+    lastInventoryRequest[source] = now
     local inventory, err = FoundationInventory.GetInventory(source)
     TriggerClientEvent('foundation:client:inventory:data', source, inventory, err)
 end)
 
 RegisterNetEvent('foundation:server:inventory:use', function(slot)
     local source = source
+    local now = GetGameTimer()
+    if lastItemUse[source] and now - lastItemUse[source] < 500 then return end
+    lastItemUse[source] = now
     local ok, err = FoundationInventory.UseItem(source, slot)
     local inventory, inventoryError = FoundationInventory.GetInventory(source)
     TriggerClientEvent('foundation:client:inventory:actionResult', source, ok, err)
