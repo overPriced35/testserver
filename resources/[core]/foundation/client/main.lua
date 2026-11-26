@@ -166,6 +166,7 @@ RegisterNetEvent('foundation:client:characters:selected', function(success, resu
     Wait(1200)
     saveAppearance()
     TriggerServerEvent('foundation:server:status:request')
+    TriggerEvent('foundation:client:jobChanged', result.job and { name = result.job, grade = result.job_grade or 0, on_duty = false } or nil)
     TriggerEvent('foundation:client:characterReady', result, result.appearance)
 end)
 
@@ -187,6 +188,11 @@ RegisterCommand('inventory', function()
     TriggerServerEvent('foundation:server:inventory:request')
 end, false)
 RegisterKeyMapping('inventory', 'Open inventory', 'keyboard', 'F2')
+
+RegisterNetEvent('foundation:client:jobUpdated', function(job)
+    if not job then return end
+    TriggerEvent('foundation:client:jobChanged', job)
+end)
 
 RegisterNetEvent('foundation:client:inventory:data', function(inventory, err)
     SendNUIMessage({ action = 'inventoryData', inventory = inventory, error = err })
