@@ -7,7 +7,10 @@ end
 function FoundationMetadata.Get(source, key)
     local player = FoundationPlayers.Get(source)
     if not player then return nil end
-    if key == nil then return player.metadata end
+    if key == nil then
+        local ok, copy = pcall(json.decode, json.encode(player.metadata))
+        return ok and copy or {}
+    end
     return player.metadata[key]
 end
 
@@ -22,7 +25,7 @@ function FoundationMetadata.Set(source, key, value)
         return false
     end
     local saved, ok = pcall(FoundationDB.SavePlayerMetadata, player.identifier, player.metadata)
-    if not saved or not ok then
+    if not saved then
         player.metadata[key] = previous
         return false
     end

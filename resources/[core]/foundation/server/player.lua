@@ -45,11 +45,19 @@ function FoundationPlayers.Load(source)
         record.name = name
     end
 
+    if not record then
+        DropPlayer(source, 'Your player record could not be created. Please reconnect.')
+        return
+    end
+
+    local metadataOk, metadata = pcall(json.decode, record.metadata or '{}')
+    if not metadataOk or type(metadata) ~= 'table' then metadata = {} end
+
     players[source] = {
         source = source,
         identifier = identifier,
         name = name,
-        metadata = json.decode(record.metadata or '{}') or {}
+        metadata = metadata
     }
 
     TriggerEvent('foundation:server:playerLoaded', source, players[source])

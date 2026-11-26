@@ -89,7 +89,12 @@ function FoundationInventory.RegisterItem(name, definition)
 end
 
 function FoundationInventory.GetItemDefinition(name)
-    return definitions[name]
+    name = type(name) == 'string' and name:lower() or nil
+    local definition = name and definitions[name]
+    if not definition then return nil end
+    local copy = {}
+    for key, value in pairs(definition) do copy[key] = value end
+    return copy
 end
 
 function FoundationInventory.GetInventory(source)
@@ -178,6 +183,7 @@ function FoundationInventory.HasItem(source, name, count)
     local inventory, err = FoundationInventory.GetInventory(source)
     if not inventory then return false, err end
     local total = 0
+    name = type(name) == 'string' and name:lower() or nil
     for _, item in ipairs(inventory.items) do
         if item.name == name then total = total + item.count end
     end
