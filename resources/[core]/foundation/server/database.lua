@@ -118,3 +118,25 @@ function FoundationDB.SaveCharacterStatus(characterId, status)
         { status.hunger, status.thirst, status.stress, characterId }
     )
 end
+
+
+function FoundationDB.EnsureCharacterJob(characterId)
+    MySQL.insert.await(
+        "INSERT IGNORE INTO character_jobs (character_id, job, grade) VALUES (?, 'unemployed', 0)",
+        { characterId }
+    )
+end
+
+function FoundationDB.FetchCharacterJob(characterId)
+    return MySQL.single.await(
+        'SELECT job, grade FROM character_jobs WHERE character_id = ?',
+        { characterId }
+    )
+end
+
+function FoundationDB.SaveCharacterJob(characterId, job, grade)
+    return MySQL.update.await(
+        'INSERT INTO character_jobs (character_id, job, grade) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE job = VALUES(job), grade = VALUES(grade)',
+        { characterId, job, grade }
+    )
+end

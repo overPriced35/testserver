@@ -188,12 +188,6 @@ RegisterCommand('inventory', function()
 end, false)
 RegisterKeyMapping('inventory', 'Open inventory', 'keyboard', 'F2')
 
-RegisterNetEvent('foundation:client:statusUpdated', function(status, err)
-    if not status then return end
-    TriggerEvent('foundation:client:statusChanged', status, err)
-    SendNUIMessage({ action = 'statusData', status = status })
-end)
-
 RegisterNetEvent('foundation:client:inventory:data', function(inventory, err)
     SendNUIMessage({ action = 'inventoryData', inventory = inventory, error = err })
 end)

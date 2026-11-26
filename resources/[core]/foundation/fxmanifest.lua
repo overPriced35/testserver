@@ -24,6 +24,7 @@ server_scripts {
     'server/player.lua',
     'server/metadata.lua',
     'server/status.lua',
+    'server/jobs.lua',
     'server/inventory.lua',
     'server/characters.lua',
     'server/main.lua'

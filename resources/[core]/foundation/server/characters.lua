@@ -130,6 +130,11 @@ function FoundationCharacters.Select(source, characterId)
     if not character then return false, 'That character does not belong to your account.' end
     character.appearance = character.appearance and json.decode(character.appearance) or nil
     player.character = character
+    FoundationDB.EnsureCharacterJob(characterId)
+    local job = FoundationDB.FetchCharacterJob(characterId) or { job = 'unemployed', grade = 0 }
+    player.character.job = job.job
+    player.character.job_grade = tonumber(job.grade) or 0
+    player.duty = false
     FoundationDB.TouchCharacter(player.identifier, characterId)
     TriggerEvent('foundation:server:characterSelected', source, character)
     TriggerClientEvent('foundation:client:characters:selected', source, true, character)
