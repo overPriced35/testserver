@@ -73,7 +73,8 @@ function FoundationInventory.RegisterItem(name, definition)
     if not validItemName(name) or type(definition) ~= 'table' then return false end
     local weight = tonumber(definition.weight)
     local maxStack = tonumber(definition.maxStack) or 100
-    if not weight or weight < 0 or weight > 100000 or maxStack < 1 or maxStack > 100000 or maxStack % 1 ~= 0 then
+    if not weight or weight ~= weight or weight == math.huge or weight < 0 or weight > 100000
+        or maxStack ~= maxStack or maxStack < 1 or maxStack > 100000 or maxStack % 1 ~= 0 then
         return false
     end
     definitions[name] = {
@@ -105,8 +106,10 @@ function FoundationInventory.AddItem(source, name, count, metadata)
     local definition = definitions[name]
     if not definition or not count then return false, 'Invalid item or quantity.' end
     if metadata ~= nil and type(metadata) ~= 'table' then return false, 'Item metadata must be a table.' end
-    local encoded = json.encode(metadata or {})
-    if not encoded or #encoded > Config.MaxItemMetadataBytes then return false, 'Item metadata is too large.' end
+    local encodedOk, encoded = pcall(json.encode, metadata or {})
+    if not encodedOk or type(encoded) ~= 'string' or #encoded > Config.MaxItemMetadataBytes then
+        return false, 'Item metadata is invalid or too large.'
+    end
 
     return withLock(source, function()
         local character, err = getCharacter(source)
@@ -145,6 +148,9 @@ function FoundationInventory.RemoveItem(source, name, count, metadata)
     name = type(name) == 'string' and name:lower() or nil
     count = validCount(count)
     if not definitions[name] or not count then return false, 'Invalid item or quantity.' end
+    if metadata ~= nil and type(metadata) ~= 'table' then return false, 'Item metadata must be a table.' end
+    local metadataOk, metadataEncoded = pcall(json.encode, metadata or {})
+    if not metadataOk or type(metadataEncoded) ~= 'string' then return false, 'Invalid item metadata.' end
     return withLock(source, function()
         local character, err = getCharacter(source)
         if not character then return false, err end
@@ -152,7 +158,7 @@ function FoundationInventory.RemoveItem(source, name, count, metadata)
         local remaining = count
         for index = #items, 1, -1 do
             local item = items[index]
-            local matchesMetadata = metadata == nil or json.encode(item.metadata) == json.encode(metadata)
+            local matchesMetadata = metadata == nil or json.encode(item.metadata) == metadataEncoded
             if item.name == name and matchesMetadata then
                 local moved = math.min(remaining, item.count)
                 item.count = item.count - moved

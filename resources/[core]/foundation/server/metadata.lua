@@ -16,13 +16,13 @@ function FoundationMetadata.Set(source, key, value)
     if not player or not validKey(key) then return false end
     local previous = player.metadata[key]
     player.metadata[key] = value
-    local encoded = json.encode(player.metadata)
-    if not encoded or #encoded > Config.MaxPlayerMetadataBytes then
+    local encodedOk, encoded = pcall(json.encode, player.metadata)
+    if not encodedOk or type(encoded) ~= 'string' or #encoded > Config.MaxPlayerMetadataBytes then
         player.metadata[key] = previous
         return false
     end
-    local ok = FoundationDB.SavePlayerMetadata(player.identifier, player.metadata)
-    if not ok then
+    local saved, ok = pcall(FoundationDB.SavePlayerMetadata, player.identifier, player.metadata)
+    if not saved or not ok then
         player.metadata[key] = previous
         return false
     end
@@ -35,8 +35,8 @@ function FoundationMetadata.Remove(source, key)
     if not player or not validKey(key) or player.metadata[key] == nil then return false end
     local previous = player.metadata[key]
     player.metadata[key] = nil
-    local ok = FoundationDB.SavePlayerMetadata(player.identifier, player.metadata)
-    if not ok then player.metadata[key] = previous; return false end
+    local saved, ok = pcall(FoundationDB.SavePlayerMetadata, player.identifier, player.metadata)
+    if not saved or not ok then player.metadata[key] = previous; return false end
     TriggerEvent('foundation:server:metadataChanged', source, key, nil, previous)
     return true
 end
