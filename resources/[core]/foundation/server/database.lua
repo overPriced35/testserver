@@ -1,4 +1,4 @@
-FoundationDB = {}
+FoundationDB = FoundationDB or {}
 
 function FoundationDB.FetchPlayer(identifier)
     return MySQL.single.await(
@@ -18,6 +18,13 @@ function FoundationDB.UpdateLastSeen(identifier, name)
     MySQL.update.await(
         ('UPDATE %s SET name = ?, last_seen = NOW() WHERE identifier = ?'):format(Config.PlayerTable),
         { name, identifier }
+    )
+end
+
+function FoundationDB.SavePlayerMetadata(identifier, metadata)
+    return MySQL.update.await(
+        ('UPDATE %s SET metadata = ? WHERE identifier = ?'):format(Config.PlayerTable),
+        { json.encode(metadata), identifier }
     )
 end
 
@@ -69,4 +76,24 @@ function FoundationDB.SaveCharacterAppearance(identifier, characterId, appearanc
         ('UPDATE %s SET appearance = ? WHERE owner_identifier = ? AND id = ?'):format(Config.CharacterTable),
         { json.encode(appearance), identifier, characterId }
     )
+end
+
+function FoundationDB.FetchInventory(characterId)
+    return MySQL.query.await(
+        'SELECT slot, item, count, metadata FROM character_inventory WHERE character_id = ? ORDER BY slot ASC',
+        { characterId }
+    ) or {}
+end
+
+function FoundationDB.ReplaceInventory(characterId, items)
+    local queries = {
+        { query = 'DELETE FROM character_inventory WHERE character_id = ?', values = { characterId } }
+    }
+    for _, item in ipairs(items) do
+        queries[#queries + 1] = {
+            query = 'INSERT INTO character_inventory (character_id, slot, item, count, metadata) VALUES (?, ?, ?, ?, ?)',
+            values = { characterId, item.slot, item.name, item.count, json.encode(item.metadata or {}) }
+        }
+    end
+    return MySQL.transaction.await(queries)
 end

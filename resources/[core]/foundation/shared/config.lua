@@ -17,3 +17,8 @@ Config.Spawn = {
     z = 20.2,
     heading = 329.0
 }
+
+Config.InventorySlots = 30
+Config.InventoryMaxWeight = 30000
+Config.MaxItemMetadataBytes = 4096
+Config.MaxPlayerMetadataBytes = 16384
