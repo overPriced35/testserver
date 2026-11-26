@@ -165,6 +165,7 @@ RegisterNetEvent('foundation:client:characters:selected', function(success, resu
     DoScreenFadeIn(800)
     Wait(1200)
     saveAppearance()
+    TriggerServerEvent('foundation:server:status:request')
     TriggerEvent('foundation:client:characterReady', result, result.appearance)
 end)
 

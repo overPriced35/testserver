@@ -280,3 +280,15 @@ RegisterNetEvent('foundation:server:inventory:use', function(slot)
     TriggerClientEvent('foundation:client:inventory:actionResult', source, ok, err)
     TriggerClientEvent('foundation:client:inventory:data', source, inventory, inventoryError)
 end)
+
+FoundationInventory.RegisterUsableItem('water', function(source)
+    local ok = FoundationStatus.Modify(source, { thirst = 35 })
+    if ok then return true end
+    return false
+end)
+
+FoundationInventory.RegisterUsableItem('sandwich', function(source)
+    local ok = FoundationStatus.Modify(source, { hunger = 30 })
+    if ok then return true end
+    return false
+end)

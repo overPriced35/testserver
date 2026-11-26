@@ -97,3 +97,24 @@ function FoundationDB.ReplaceInventory(characterId, items)
     end
     return MySQL.transaction.await(queries)
 end
+
+function FoundationDB.EnsureCharacterStatus(characterId)
+    MySQL.insert.await(
+        'INSERT IGNORE INTO character_status (character_id, hunger, thirst, stress) VALUES (?, 100, 100, 0)',
+        { characterId }
+    )
+end
+
+function FoundationDB.FetchCharacterStatus(characterId)
+    return MySQL.single.await(
+        'SELECT hunger, thirst, stress FROM character_status WHERE character_id = ?',
+        { characterId }
+    )
+end
+
+function FoundationDB.SaveCharacterStatus(characterId, status)
+    return MySQL.update.await(
+        'UPDATE character_status SET hunger = ?, thirst = ?, stress = ? WHERE character_id = ?',
+        { status.hunger, status.thirst, status.stress, characterId }
+    )
+end
