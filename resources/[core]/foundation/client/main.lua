@@ -166,9 +166,6 @@ RegisterNUICallback('selectCharacter', function(data, cb)
     cb({ ok = true })
 end)
 
-RegisterNUICallback('close', function(_, cb)
-    cb({ ok = false })
-end)
 
 
 RegisterCommand('saveappearance', saveAppearance, false)
