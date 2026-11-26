@@ -11,7 +11,6 @@ Config.PositionSaveThrottle = 60000
 Config.AppearanceSaveThrottle = 10000
 Config.MaxAppearanceBytes = 32768
 
--- Initial city spawn used only for characters without a saved position.
 Config.Spawn = {
     x = -1037.7,
     y = -2737.8,

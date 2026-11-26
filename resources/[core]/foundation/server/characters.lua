@@ -1,6 +1,7 @@
 FoundationCharacters = {}
 
 local lastStateSave = {}
+local lastAppearanceSave = {}
 
 local function trim(value)
     return (value:gsub('^%s*(.-)%s*$', '%1'))
@@ -31,16 +32,41 @@ local function getLoadedPlayer(source)
     return player
 end
 
-local function validPosition(position)
-    if type(position) ~= 'table' then return false end
-    for _, key in ipairs({ 'x', 'y', 'z', 'heading' }) do
-        local value = tonumber(position[key])
-        if not value or value ~= value or value == math.huge or value == -math.huge then return false end
+local function normalizePosition(position)
+    if type(position) ~= 'table' then return nil end
+    local normalized = {
+        x = tonumber(position.x), y = tonumber(position.y),
+        z = tonumber(position.z), heading = tonumber(position.heading)
+    }
+    for _, value in pairs(normalized) do
+        if not value or value ~= value or value == math.huge or value == -math.huge then return nil end
     end
-    return math.abs(position.x) <= 10000
-        and math.abs(position.y) <= 10000
-        and position.z >= -500 and position.z <= 3000
-        and position.heading >= 0 and position.heading <= 360
+    if math.abs(normalized.x) > 10000 or math.abs(normalized.y) > 10000
+        or normalized.z < -500 or normalized.z > 3000
+        or normalized.heading < 0 or normalized.heading > 360 then return nil end
+    return normalized
+end
+
+local function validAppearance(appearance)
+    if type(appearance) ~= 'table' then return false end
+    if appearance.model ~= 'mp_m_freemode_01' and appearance.model ~= 'mp_f_freemode_01' then return false end
+    if type(appearance.components) ~= 'table' or #appearance.components > 12 then return false end
+    if type(appearance.props) ~= 'table' or #appearance.props > 8 then return false end
+
+    for _, item in ipairs(appearance.components) do
+        if type(item) ~= 'table' or type(item.component) ~= 'number'
+            or item.component < 0 or item.component > 11 or item.component % 1 ~= 0
+            or type(item.drawable) ~= 'number' or item.drawable < 0 or item.drawable > 500
+            or type(item.texture) ~= 'number' or item.texture < 0 or item.texture > 100
+            or type(item.palette) ~= 'number' or item.palette < 0 or item.palette > 3 then return false end
+    end
+    for _, item in ipairs(appearance.props) do
+        if type(item) ~= 'table' or type(item.prop) ~= 'number'
+            or item.prop < 0 or item.prop > 7 or item.prop % 1 ~= 0
+            or type(item.drawable) ~= 'number' or item.drawable < -1 or item.drawable > 500
+            or type(item.texture) ~= 'number' or item.texture < 0 or item.texture > 100 then return false end
+    end
+    return true
 end
 
 function FoundationCharacters.List(source)
@@ -54,11 +80,8 @@ function FoundationCharacters.Create(source, input)
     if not player then return false, err end
     if type(input) ~= 'table' then return false, 'Invalid character data.' end
 
-    local firstname = validName(input.firstname)
-    local lastname = validName(input.lastname)
-    local dob = input.date_of_birth
-    local gender = input.gender
-
+    local firstname, lastname = validName(input.firstname), validName(input.lastname)
+    local dob, gender = input.date_of_birth, input.gender
     if not firstname or not lastname then return false, 'First and last names must be 2–24 valid characters.' end
     if not validDate(dob) then return false, 'Date of birth must be a valid date in YYYY-MM-DD format.' end
     if gender ~= 'male' and gender ~= 'female' and gender ~= 'other' then return false, 'Select a valid gender.' end
@@ -81,7 +104,6 @@ function FoundationCharacters.Select(source, characterId)
 
     local character = FoundationDB.FetchCharacter(player.identifier, characterId)
     if not character then return false, 'That character does not belong to your account.' end
-
     character.appearance = character.appearance and json.decode(character.appearance) or nil
     player.character = character
     FoundationDB.TouchCharacter(player.identifier, characterId)
@@ -93,30 +115,22 @@ end
 function FoundationCharacters.SavePosition(source, position)
     local player = FoundationPlayers.Get(source)
     if not player or not player.character then return false end
-    if not validPosition(position) then return false end
-
-    local now = GetGameTimer()
-    local previous = lastStateSave[source] or 0
-    if now - previous < Config.PositionSaveThrottle then return false end
+    local normalized = normalizePosition(position)
+    if not normalized then return false end
+    local now, previous = GetGameTimer(), lastStateSave[source]
+    if previous and now - previous < Config.PositionSaveThrottle then return false end
     lastStateSave[source] = now
-
-    return FoundationDB.SaveCharacterState(
-        player.identifier,
-        player.character.id,
-        {
-            x = tonumber(position.x),
-            y = tonumber(position.y),
-            z = tonumber(position.z),
-            heading = tonumber(position.heading)
-        }
-    )
+    return FoundationDB.SaveCharacterState(player.identifier, player.character.id, normalized)
 end
 
 function FoundationCharacters.SaveAppearance(source, appearance)
     local player = FoundationPlayers.Get(source)
-    if not player or not player.character or type(appearance) ~= 'table' then return false end
+    if not player or not player.character or not validAppearance(appearance) then return false end
+    local now, previous = GetGameTimer(), lastAppearanceSave[source]
+    if previous and now - previous < Config.AppearanceSaveThrottle then return false end
     local encoded = json.encode(appearance)
     if type(encoded) ~= 'string' or #encoded > Config.MaxAppearanceBytes then return false end
+    lastAppearanceSave[source] = now
     return FoundationDB.SaveCharacterAppearance(player.identifier, player.character.id, appearance)
 end
 
@@ -144,6 +158,11 @@ end)
 
 RegisterNetEvent('foundation:server:characters:saveAppearance', function(appearance)
     FoundationCharacters.SaveAppearance(source, appearance)
+end)
+
+AddEventHandler('playerDropped', function()
+    lastStateSave[source] = nil
+    lastAppearanceSave[source] = nil
 end)
 
 exports('GetCharacter', function(source)
